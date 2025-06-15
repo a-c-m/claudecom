@@ -1,5 +1,7 @@
 # ClaudeCom
 
+**Project Status: Abandoned** - This approach proved more complex than anticipated. See [Project Learnings](#project-learnings) below.
+
 Terminal-to-chat bridge for remote monitoring and control of terminal applications.
 
 ## Installation
@@ -54,7 +56,26 @@ ClaudeCom acts as a bridge between terminal applications and chat platforms. It:
 
 ## Current Status
 
-🚧 This project is under active development. Core piping functionality is being implemented.
+❌ **Project Abandoned** - The implementation complexity of handling Claude's output streams for both local CLI and remote transport systems proved challenging. The project is being abandoned in favor of a simpler approach focused on notifications and SSH access.
+
+## Project Learnings
+
+### Why This Approach Was Abandoned
+
+1. **Output Complexity**: Claude's output includes complex formatting, ANSI escape codes, interactive prompts, and permission dialogs that are difficult to parse and transform reliably across different transport mechanisms.
+
+2. **Bidirectional Communication**: Managing the bidirectional flow between the terminal application and remote chat systems while preserving the interactive nature of the CLI proved overly complex.
+
+3. **State Management**: Maintaining consistent state between the local terminal session and remote views required significant architectural overhead.
+
+4. **Permission Handling**: Claude's permission dialogs and interactive elements don't translate well to non-terminal environments without significant adaptation.
+
+### Next Steps
+
+The learnings from this project are being applied to a simpler approach that focuses on:
+- **Notifications**: Simple alerts for important events
+- **SSH Access**: Direct terminal access when needed
+- **Less abstraction**: Working with the terminal's natural interface rather than trying to transform it
 
 ## License
 
