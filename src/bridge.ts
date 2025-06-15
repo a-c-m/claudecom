@@ -1,10 +1,10 @@
-import { CommunicationAdapter } from './adapters/types';
+import { CommunicationTransport } from './transports/types';
 import { ClaudePtyProcess } from './terminal/claude-pty-process';
 import { ConversationLogger } from './utils/conversation-logger';
 
 export interface BridgeOptions {
   command?: string;
-  adapter: CommunicationAdapter;
+  transport: CommunicationTransport;
   instanceName: string;
   verbose: boolean;
   bufferTimeout?: number;
@@ -30,30 +30,30 @@ export class Bridge {
     // Initialize everything first before showing any UI
     let transportName = '';
     try {
-      // Initialize adapter
-      await this.options.adapter.init();
-      const setupResult = await this.options.adapter.setup(this.options.instanceName);
+      // Initialize transport
+      await this.options.transport.init();
+      const setupResult = await this.options.transport.setup(this.options.instanceName);
       this.contextId = setupResult.contextId;
       
       // Get transport name for display
-      const adapterType = this.options.transportType || 'file';
-      if (adapterType.endsWith('.js') || adapterType.endsWith('.ts')) {
+      const transportType = this.options.transportType || 'file';
+      if (transportType.endsWith('.js') || transportType.endsWith('.ts')) {
         // Custom transport - show filename
-        transportName = adapterType.split('/').pop() || adapterType;
+        transportName = transportType.split('/').pop() || transportType;
       } else {
         // Built-in transport
-        transportName = adapterType;
+        transportName = transportType;
       }
 
       // Set up command handler
-      this.options.adapter.onMessage((context: string, message: string) => {
+      this.options.transport.onMessage((context: string, message: string) => {
         if (context === this.contextId) {
           this.handleCommand(message);
         }
       });
 
       // Send start message
-      await this.options.adapter.sendMessage(
+      await this.options.transport.sendMessage(
         this.contextId,
         `🟢 Instance started: ${this.options.instanceName}`
       );
@@ -113,7 +113,7 @@ export class Bridge {
     this.setupTerminalInput();
     
     // Get transport-specific tips
-    const tips = this.options.adapter.getInitTips?.() || [];
+    const tips = this.options.transport.getInitTips?.() || [];
     
     // Show startup banner  
     process.stderr.write('\n');
@@ -208,11 +208,11 @@ export class Bridge {
     
     if (conversation) {
       try {
-        // Send clean conversation content to adapter
-        await this.options.adapter.sendMessage(this.contextId, conversation);
+        // Send clean conversation content to transport
+        await this.options.transport.sendMessage(this.contextId, conversation);
       } catch (error) {
         if (this.options.verbose) {
-          process.stderr.write(`[claudecom] Failed to send to adapter: ${error}\n`);
+          process.stderr.write(`[claudecom] Failed to send to transport: ${error}\n`);
         }
       }
     }
@@ -278,7 +278,7 @@ export class Bridge {
     // Send stop message
     if (this.contextId) {
       try {
-        await this.options.adapter.sendMessage(
+        await this.options.transport.sendMessage(
           this.contextId,
           `🔴 Instance terminated: ${this.options.instanceName}`
         );
@@ -296,6 +296,6 @@ export class Bridge {
       this.process.stop();
     }
 
-    await this.options.adapter.cleanup();
+    await this.options.transport.cleanup();
   }
 }

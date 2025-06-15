@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
 import { Bridge } from './bridge';
-import { createAdapter, AdapterType } from './adapters';
+import { createTransport, TransportType } from './transports';
 import { ConfigManager } from './config';
 
 const program = new Command();
@@ -11,7 +11,6 @@ program
   .description('Remote communication for Claude and other terminal apps')
   .version('1.0.0')
   .option('-n, --name <name>', 'instance name')
-  .option('-a, --adapter <type>', 'adapter type (slack, discord, telegram)')
   .option('-t, --transport <type>', 'transport type (file, slack, discord, telegram)')
   .option('--mcp-config <path>', 'path to MCP config file')
   .option('--config <path>', 'path to ClaudeCom config file')
@@ -38,7 +37,7 @@ program
     }
     
     // Get configuration values (CLI options override config file)
-    const transportType = config.get('transport') as AdapterType;
+    const transportType = config.get('transport') as TransportType;
     const instanceName = config.get('instance');
     const verbose = config.get('verbose', false);
     
@@ -58,13 +57,13 @@ program
       // Get transport-specific config
       const transportConfig = config.getTransportConfig(transportType);
       
-      // Create adapter with transport-specific config
-      const adapter = createAdapter(transportType, transportConfig);
+      // Create transport with transport-specific config
+      const transport = createTransport(transportType, transportConfig);
 
       // Create the bridge
       bridge = new Bridge({
         command: command || config.get('command', 'claude'),
-        adapter,
+        transport,
         instanceName,
         verbose,
         transportType

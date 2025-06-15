@@ -139,9 +139,8 @@ export class ConfigManager {
   }
   
   private applyCommandLineOptions(): void {
-    // Handle both transport and adapter for backwards compatibility
-    if (this.options.transport || this.options.adapter) {
-      this.config.transport = this.options.transport || this.options.adapter;
+    if (this.options.transport) {
+      this.config.transport = this.options.transport;
     }
     if (this.options.name) {
       this.config.instance = this.options.name;

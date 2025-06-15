@@ -1,23 +1,23 @@
-import { CommunicationAdapter } from './types';
+import { CommunicationTransport } from './types';
 import { watch, existsSync, readFileSync, writeFileSync, appendFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { mkdirSync } from 'fs';
 import { EventEmitter } from 'events';
 
-export interface FileAdapterConfig {
+export interface FileTransportConfig {
   inputPath?: string;
   outputPath?: string;
   watchInterval?: number;
 }
 
-export class FileAdapter extends EventEmitter implements CommunicationAdapter {
+export class FileTransport extends EventEmitter implements CommunicationTransport {
   public inputPath: string;  // Made public for display
   public outputPath: string; // Made public for display
   private watcher?: any;
   private messageHandler?: (context: string, message: string) => void;
   private contextId?: string;
 
-  constructor(private config: FileAdapterConfig = {}) {
+  constructor(private config: FileTransportConfig = {}) {
     super();
     this.inputPath = config.inputPath || join(process.cwd(), 'input.txt');
     this.outputPath = config.outputPath || join(process.cwd(), 'output.txt');
@@ -106,7 +106,7 @@ export class FileAdapter extends EventEmitter implements CommunicationAdapter {
         writeFileSync(this.inputPath, '# Add your command/prompt here\n# The entire file content will be sent as one request\n');
       }
     } catch (error) {
-      console.error('[FileAdapter] Error reading input file:', error);
+      console.error('[FileTransport] Error reading input file:', error);
     }
   }
 
@@ -118,7 +118,7 @@ export class FileAdapter extends EventEmitter implements CommunicationAdapter {
       // Append to output file
       appendFileSync(this.outputPath, formattedMessage);
     } catch (error) {
-      console.error('[FileAdapter] Error writing to output file:', error);
+      console.error('[FileTransport] Error writing to output file:', error);
     }
   }
 

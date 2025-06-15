@@ -1,4 +1,4 @@
-export interface AdapterConfig {
+export interface TransportConfig {
   [key: string]: any;
 }
 
@@ -7,8 +7,8 @@ export interface SetupResult {
   displayName: string;
 }
 
-export interface CommunicationAdapter {
-  init(config?: AdapterConfig): Promise<void>;
+export interface CommunicationTransport {
+  init(config?: TransportConfig): Promise<void>;
   setup(instanceName: string): Promise<SetupResult>;
   sendMessage(context: string, message: string): Promise<void>;
   onMessage(handler: (context: string, message: string) => void): void;
