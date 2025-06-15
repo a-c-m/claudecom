@@ -45,18 +45,18 @@ export class ClaudePtyProcess extends EventEmitter {
     }
 
     // Handle output from Claude
-    this._pty.on('data', (data) => {
+    this._pty.onData((data: string) => {
       this.emit('output', Buffer.from(data));
       // Also write to stdout so user can see it
       process.stdout.write(data);
     });
 
     // Handle process exit
-    this._pty.on('exit', (exitCode, signal) => {
+    this._pty.onExit((exitEvent: {exitCode: number, signal?: number}) => {
       this.isRunning = false;
-      this.emit('exit', exitCode);
+      this.emit('exit', exitEvent.exitCode);
       if (this.options.verbose) {
-        process.stderr.write(`[claudecom] Process exited with code ${exitCode}, signal ${signal}\n`);
+        process.stderr.write(`[claudecom] Process exited with code ${exitEvent.exitCode}, signal ${exitEvent.signal}\n`);
       }
     });
 

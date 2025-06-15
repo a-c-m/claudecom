@@ -34,10 +34,15 @@ export class ConfigManager {
   
   // Default configuration - minimal defaults only
   private defaults: ClaudeComConfig = {
+    transport: 'file', // Default to file transport
     instance: process.cwd().split('/').pop() || 'claude-com',
     verbose: false,
     printMode: false,
-    command: 'claude'
+    command: 'claude',
+    file: {
+      inputPath: './input.txt',
+      outputPath: './output.txt'
+    }
   };
   
   private configFound = false;

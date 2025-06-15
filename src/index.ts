@@ -27,24 +27,18 @@ program
     // Initialize configuration manager
     const config = new ConfigManager(options);
     
-    // Check if we have valid configuration
-    if (!config.isValid()) {
-      process.stderr.write('Error: No transport specified.\n\n');
-      process.stderr.write('Please specify a transport using one of these methods:\n');
-      process.stderr.write('  1. Command line: claudecom --transport file\n');
-      process.stderr.write('  2. Config file: Create claudecom.json or .claudecom.json\n');
-      process.stderr.write('  3. User config: ~/.claudecom/config.json\n');
-      process.stderr.write('  4. Environment: export CLAUDECOM_TRANSPORT=file\n\n');
-      process.stderr.write('Example config file:\n');
-      process.stderr.write('{\n');
-      process.stderr.write('  "transport": "file",\n');
-      process.stderr.write('  "file": {\n');
-      process.stderr.write('    "inputPath": "./input.txt",\n');
-      process.stderr.write('    "outputPath": "./output.txt"\n');
-      process.stderr.write('  }\n');
-      process.stderr.write('}\n\n');
-      process.stderr.write('For more information, see: https://github.com/a-c-m/claude-com\n');
-      process.exit(1);
+    // Show warning if no config file was found
+    if (!config.hasConfigFile() && !options.transport && !process.env.CLAUDECOM_TRANSPORT) {
+      process.stderr.write('⚠️  No configuration file found. Using default file transport.\n');
+      process.stderr.write('   Input: ./input.txt, Output: ./output.txt\n\n');
+      process.stderr.write('   To configure ClaudeCom, create a .claudecom.json file:\n');
+      process.stderr.write('   {\n');
+      process.stderr.write('     "transport": "file",\n');
+      process.stderr.write('     "file": {\n');
+      process.stderr.write('       "inputPath": "./custom-input.txt",\n');
+      process.stderr.write('       "outputPath": "./custom-output.txt"\n');
+      process.stderr.write('     }\n');
+      process.stderr.write('   }\n\n');
     }
     
     // Get configuration values (CLI options override config file)

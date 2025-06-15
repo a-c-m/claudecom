@@ -128,8 +128,8 @@ export class StandaloneBridge {
     if (tips.length > 0) {
       process.stderr.write('│                                                 │\n');
       tips.forEach(tip => {
-        // Don't truncate, just format nicely
-        process.stderr.write(`│    ${tip.padEnd(45)} │\n`);
+        // Pad to 44 characters to account for the 4 spaces before
+        process.stderr.write(`│    ${tip.padEnd(44)} │\n`);
       });
     }
     
@@ -190,10 +190,10 @@ export class StandaloneBridge {
     if (hasResponse && hasPrompt && fullBuffer.endsWith('─╯\n')) {
       this.flushOutputBuffer();
     } else {
-      // Otherwise use a shorter timeout
+      // Use a much shorter timeout for more responsive updates
       this.bufferTimer = setTimeout(() => {
         this.flushOutputBuffer();
-      }, this.options.bufferTimeout || 500); // 500ms for quicker updates
+      }, this.options.bufferTimeout || 100); // Reduced from 500ms to 100ms
     }
   }
 

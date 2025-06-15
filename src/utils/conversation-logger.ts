@@ -2,11 +2,11 @@ import { stripAnsi } from './ansi-stripper';
 
 export class ConversationLogger {
   private lastUserMessage = '';
-  private lastClaudeResponse = '';
   private lastLoggedUser = '';     // Track what we actually logged
   private lastLoggedClaude = '';   // Track what we actually logged
   private isCapturingResponse = false;
   private responseBuffer: string[] = [];
+  private lastProcessTime = Date.now();
   
   process(rawText: string): string | null {
     // Strip ANSI codes first
@@ -83,11 +83,10 @@ export class ConversationLogger {
           this.responseBuffer.push(trimmed);
         }
       }
-      // If we hit a new prompt, save the response
-      else if (trimmed === '' && this.isCapturingResponse && this.responseBuffer.length > 0) {
+      // If we hit a new prompt or empty line after capturing, save the response
+      else if ((trimmed === '' || trimmed.includes('│ >')) && this.isCapturingResponse && this.responseBuffer.length > 0) {
         const response = this.responseBuffer.join('\n').trim();
         if (response) {
-          this.lastClaudeResponse = response;
           // Only log if we haven't logged this exact response before
           if (response !== this.lastLoggedClaude) {
             this.lastLoggedClaude = response;
@@ -107,7 +106,13 @@ export class ConversationLogger {
     // If we have a completed response buffer, return it
     if (this.isCapturingResponse && this.responseBuffer.length > 0) {
       const response = this.responseBuffer.join('\n').trim();
-      if (response && !response.includes('Thriving')) {
+      const timeSinceLastProcess = Date.now() - this.lastProcessTime;
+      
+      // Flush if we have content and either:
+      // 1. It's been more than 200ms since last update (response is likely complete)
+      // 2. The response doesn't include status messages
+      if (response && !response.includes('Thriving') && 
+          (timeSinceLastProcess > 200 || !rawText.includes('⏺'))) {
         // Only return if we haven't logged this before
         if (response !== this.lastLoggedClaude) {
           this.lastLoggedClaude = response;
@@ -118,6 +123,7 @@ export class ConversationLogger {
       }
     }
     
+    this.lastProcessTime = Date.now();
     return null;
   }
 }

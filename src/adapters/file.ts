@@ -19,8 +19,8 @@ export class FileAdapter extends EventEmitter implements CommunicationAdapter {
 
   constructor(private config: FileAdapterConfig = {}) {
     super();
-    this.inputPath = config.inputPath || join(process.cwd(), '.claude/wip/scratchpad/input.txt');
-    this.outputPath = config.outputPath || join(process.cwd(), '.claude/wip/scratchpad/output.txt');
+    this.inputPath = config.inputPath || join(process.cwd(), 'input.txt');
+    this.outputPath = config.outputPath || join(process.cwd(), 'output.txt');
   }
 
   async init(): Promise<void> {
@@ -110,7 +110,7 @@ export class FileAdapter extends EventEmitter implements CommunicationAdapter {
     }
   }
 
-  async sendMessage(context: string, message: string): Promise<void> {
+  async sendMessage(_context: string, message: string): Promise<void> {
     try {
       const timestamp = new Date().toISOString();
       const formattedMessage = `[${timestamp}]\n${message}\n\n`;
@@ -146,11 +146,12 @@ export class FileAdapter extends EventEmitter implements CommunicationAdapter {
   
   getInitTips(): string[] {
     // Return shorter paths if they're in the current directory
-    const inputDisplay = this.inputPath.startsWith(process.cwd()) 
-      ? '.' + this.inputPath.slice(process.cwd().length)
+    const cwd = process.cwd();
+    const inputDisplay = this.inputPath.startsWith(cwd) 
+      ? this.inputPath.slice(cwd.length + 1) // +1 to remove the leading slash
       : this.inputPath;
-    const outputDisplay = this.outputPath.startsWith(process.cwd())
-      ? '.' + this.outputPath.slice(process.cwd().length)
+    const outputDisplay = this.outputPath.startsWith(cwd)
+      ? this.outputPath.slice(cwd.length + 1) // +1 to remove the leading slash
       : this.outputPath;
       
     return [
