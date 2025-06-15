@@ -1,5 +1,22 @@
 # ClaudeCom
 
+## Disclaimer
+
+**This project is NOT affiliated with, endorsed by, or associated with Anthropic or Claude in any way.** This is an independent research project created to explore terminal-to-chat bridging capabilities. 
+
+- This project will be immediately removed upon request from Anthropic
+- All trademarks and product names are the property of their respective owners
+- Use at your own risk - this is experimental software
+- The author assumes no liability for any damages arising from the use of this software
+
+This project is intended solely as a research tool and learning resource for the developer community.
+
+Running a claude instance via slack is probably a bad idea :) 
+
+Enjoy.
+
+---
+
 **Project Status: Abandoned** - This approach proved more complex than anticipated. See [Project Learnings](#project-learnings) below.
 
 Terminal-to-chat bridge for remote monitoring and control of terminal applications.
