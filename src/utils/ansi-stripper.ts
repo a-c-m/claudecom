@@ -1,6 +1,7 @@
 // Strip ANSI escape codes from text
 export function stripAnsi(text: string): string {
   // Remove all ANSI escape sequences
+  /* eslint-disable no-control-regex */
   return text
     .replace(/\x1B\[[0-9;]*m/g, '') // Color codes
     .replace(/\x1B\[[0-9]*[A-Z]/g, '') // Cursor movement
@@ -11,6 +12,7 @@ export function stripAnsi(text: string): string {
     .replace(/\x1B\[[0-9]+m/g, '') // Other escape codes
     .replace(/\x1B\[[0-9]+;[0-9]+;[0-9]+;[0-9]+;[0-9]+m/g, '') // RGB colors
     .replace(/\x1B\[[0-9]+;[0-9]+;[0-9]+m/g, '') // More colors
+  /* eslint-enable no-control-regex */
     .replace(/\[\d+[A-Z]/g, '') // Remaining cursor codes
     .replace(/\[2K/g, '') // Clear line without escape
     .replace(/\[1A/g, '') // Move up without escape

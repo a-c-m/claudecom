@@ -17,6 +17,7 @@ export function createTransport(type: TransportType, config?: any): Communicatio
     
     try {
       // Dynamic import for custom transports
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const TransportModule = require(adapterPath);
       const TransportClass = TransportModule.default || TransportModule;
       
