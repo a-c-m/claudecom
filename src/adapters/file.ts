@@ -11,8 +11,8 @@ export interface FileAdapterConfig {
 }
 
 export class FileAdapter extends EventEmitter implements CommunicationAdapter {
-  private inputPath: string;
-  private outputPath: string;
+  public inputPath: string;  // Made public for display
+  public outputPath: string; // Made public for display
   private watcher?: any;
   private messageHandler?: (context: string, message: string) => void;
   private contextId?: string;
@@ -30,7 +30,7 @@ export class FileAdapter extends EventEmitter implements CommunicationAdapter {
 
     // Create input file if it doesn't exist
     if (!existsSync(this.inputPath)) {
-      writeFileSync(this.inputPath, '# Add your command/prompt here\n# The entire file content will be sent as one request\n# Use STOP to cancel the current operation (sends ESC)\n');
+      writeFileSync(this.inputPath, '# Add your command/prompt here\n# The entire file content will be sent as one request\n');
     }
 
     // Clear or create output file
@@ -41,36 +41,31 @@ export class FileAdapter extends EventEmitter implements CommunicationAdapter {
     this.contextId = `file-${instanceName}`;
     
     // Clear the input file on setup (except for comments)
-    writeFileSync(this.inputPath, '# Add your command/prompt here\n# The entire file content will be sent as one request\n# Use STOP to cancel the current operation (sends ESC)\n');
+    writeFileSync(this.inputPath, '# Add your command/prompt here\n# The entire file content will be sent as one request\n');
     
     // Start watching the input file
     this.startWatching();
 
     return {
       contextId: this.contextId,
-      displayName: `File Transport: ${instanceName}`
+      displayName: `File Transport (${this.inputPath} → ${this.outputPath})`
     };
   }
 
   private startWatching(): void {
     let isProcessing = false;
     
-    console.log('[FileAdapter] Starting file watch on:', this.inputPath);
-    
     // Initial check for any existing content
     setTimeout(() => {
-      console.log('[FileAdapter] Initial check for commands');
       this.checkForNewCommands();
     }, 500);
     
     // Watch for changes to the input file
     this.watcher = watch(this.inputPath, { persistent: true }, async (eventType) => {
-      console.log('[FileAdapter] File event:', eventType);
       if (eventType === 'change' && !isProcessing) {
         isProcessing = true;
         // Small delay to ensure file write is complete
         setTimeout(() => {
-          console.log('[FileAdapter] Processing file change');
           this.checkForNewCommands();
           isProcessing = false;
         }, 200);
@@ -102,17 +97,13 @@ export class FileAdapter extends EventEmitter implements CommunicationAdapter {
         .trim();
       
       if (nonCommentContent.length > 0) {
-        if (this.config.verbose !== false) {
-          console.log('[FileAdapter] Found command:', nonCommentContent);
-        }
-        
         // Send the entire content as one command
         if (this.messageHandler && this.contextId) {
           this.messageHandler(this.contextId, nonCommentContent);
         }
         
         // Clear the file after processing (keep the comment)
-        writeFileSync(this.inputPath, '# Add your command/prompt here\n# The entire file content will be sent as one request\n# Use STOP to cancel the current operation (sends ESC)\n');
+        writeFileSync(this.inputPath, '# Add your command/prompt here\n# The entire file content will be sent as one request\n');
       }
     } catch (error) {
       console.error('[FileAdapter] Error reading input file:', error);
@@ -151,5 +142,20 @@ export class FileAdapter extends EventEmitter implements CommunicationAdapter {
     } catch (error) {
       // Ignore cleanup errors
     }
+  }
+  
+  getInitTips(): string[] {
+    // Return shorter paths if they're in the current directory
+    const inputDisplay = this.inputPath.startsWith(process.cwd()) 
+      ? '.' + this.inputPath.slice(process.cwd().length)
+      : this.inputPath;
+    const outputDisplay = this.outputPath.startsWith(process.cwd())
+      ? '.' + this.outputPath.slice(process.cwd().length)
+      : this.outputPath;
+      
+    return [
+      `Input:  ${inputDisplay}`,
+      `Output: ${outputDisplay}`
+    ];
   }
 }

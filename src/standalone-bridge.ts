@@ -8,6 +8,7 @@ export interface StandaloneBridgeOptions {
   instanceName: string;
   verbose: boolean;
   bufferTimeout?: number;
+  transportType?: string;  // For display purposes
 }
 
 export class StandaloneBridge {
@@ -17,6 +18,8 @@ export class StandaloneBridge {
   private contextId?: string;
   private isRunning = false;
   private conversationLogger = new ConversationLogger();
+  private claudeReady = false;
+  private initialOutput = '';  // Buffer initial output until ready
 
   constructor(private options: StandaloneBridgeOptions) {}
 
@@ -24,21 +27,23 @@ export class StandaloneBridge {
     if (this.isRunning) return;
     this.isRunning = true;
 
+    // Initialize everything first before showing any UI
+    let transportName = '';
     try {
       // Initialize adapter
       await this.options.adapter.init();
       const setupResult = await this.options.adapter.setup(this.options.instanceName);
       this.contextId = setupResult.contextId;
-
-      if (this.options.verbose) {
-        process.stderr.write(`[claudecom] Adapter initialized: ${setupResult.displayName}\n`);
+      
+      // Get transport name for display
+      const adapterType = this.options.transportType || 'file';
+      if (adapterType.endsWith('.js') || adapterType.endsWith('.ts')) {
+        // Custom transport - show filename
+        transportName = adapterType.split('/').pop() || adapterType;
+      } else {
+        // Built-in transport
+        transportName = adapterType;
       }
-
-      // Send start message
-      await this.options.adapter.sendMessage(
-        this.contextId,
-        `🟢 Instance started: ${this.options.instanceName}`
-      );
 
       // Set up command handler
       this.options.adapter.onMessage((context, message) => {
@@ -46,13 +51,20 @@ export class StandaloneBridge {
           this.handleCommand(message);
         }
       });
+
+      // Send start message
+      await this.options.adapter.sendMessage(
+        this.contextId,
+        `🟢 Instance started: ${this.options.instanceName}`
+      );
     } catch (error) {
+      process.stderr.write('Error: Failed to initialize transport\n');
       if (this.options.verbose) {
-        process.stderr.write(`[claudecom] Adapter initialization failed: ${error}\n`);
+        process.stderr.write(`${error}\n`);
       }
       throw error;
     }
-
+    
     // Start the claude process with PTY
     this.process = new ClaudePtyProcess({
       command: this.options.command || 'claude',
@@ -61,6 +73,26 @@ export class StandaloneBridge {
 
     // Monitor output
     this.process.on('output', (data: Buffer) => {
+      const text = data.toString();
+      
+      if (!this.claudeReady) {
+        // Buffer output until Claude is ready
+        this.initialOutput += text;
+        
+        // Check if Claude is ready (look for the prompt)
+        if (this.initialOutput.includes('╰────') && this.initialOutput.includes('> ')) {
+          this.claudeReady = true;
+          // Clear screen and show the final Claude interface
+          process.stdout.write('\x1B[2J\x1B[H'); // Clear screen and move to top
+          process.stdout.write(this.initialOutput);
+          this.initialOutput = ''; // Clear buffer
+        }
+      } else {
+        // Claude is ready, pass output normally
+        process.stdout.write(data);
+      }
+      
+      // Always handle for logging
       this.handleOutput(data);
     });
 
@@ -77,21 +109,39 @@ export class StandaloneBridge {
       this.stop();
     });
 
-    // Start the process
-    this.process.start();
-    
-    // Give Claude time to initialize
-    if (this.options.verbose) {
-      process.stderr.write('[claudecom] Waiting for Claude to initialize...\n');
-    }
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
     // Set up terminal input passthrough
     this.setupTerminalInput();
     
-    if (this.options.verbose) {
-      process.stderr.write('[claudecom] ClaudeCom ready! You can type in terminal or edit input.txt\n');
+    // Get transport-specific tips
+    const tips = this.options.adapter.getInitTips?.() || [];
+    
+    // Show startup banner  
+    process.stderr.write('\n');
+    process.stderr.write('╭─────────────────────────────────────────────────╮\n');
+    process.stderr.write('│    ClaudeCom - Remote Claude Communication      │\n');
+    process.stderr.write('├─────────────────────────────────────────────────┤\n');
+    process.stderr.write('│                                                 │\n');
+    process.stderr.write('│  • Use Claude as you normally would             │\n');
+    process.stderr.write(`│  • Remote access via: ${transportName.padEnd(25)} │\n`);
+    
+    // Add transport-specific tips
+    if (tips.length > 0) {
+      process.stderr.write('│                                                 │\n');
+      tips.forEach(tip => {
+        // Don't truncate, just format nicely
+        process.stderr.write(`│    ${tip.padEnd(45)} │\n`);
+      });
     }
+    
+    process.stderr.write('│                                                 │\n');
+    process.stderr.write('│  Commands:                                      │\n');
+    process.stderr.write('│  • Send "STOP" via transport to cancel          │\n');
+    process.stderr.write('│  • Press Ctrl+C here to exit                    │\n');
+    process.stderr.write('╰─────────────────────────────────────────────────╯\n');
+    process.stderr.write('\n');
+    
+    // Start the process
+    this.process.start();
   }
   
   private setupTerminalInput(): void {
@@ -118,10 +168,6 @@ export class StandaloneBridge {
         this.process.pty.write(key);
       }
     });
-    
-    if (this.options.verbose) {
-      process.stderr.write('[claudecom] Terminal input passthrough enabled\n');
-    }
   }
 
   private handleOutput(chunk: Buffer): void {

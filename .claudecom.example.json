@@ -1,0 +1,29 @@
+{
+  "transport": "file",
+  "instance": "my-claude",
+  "verbose": false,
+  "printMode": false,
+  "command": "claude",
+  
+  "file": {
+    "inputPath": "./input.txt",
+    "outputPath": "./output.txt",
+    "watchInterval": 5000
+  },
+  
+  "slack": {
+    "token": "xoxb-your-bot-token",
+    "appToken": "xapp-your-app-token",
+    "signingSecret": "your-signing-secret"
+  },
+  
+  "discord": {
+    "token": "your-discord-bot-token",
+    "channelId": "your-channel-id"
+  },
+  
+  "telegram": {
+    "token": "your-telegram-bot-token",
+    "chatId": "your-chat-id"
+  }
+}

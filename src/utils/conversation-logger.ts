@@ -2,6 +2,9 @@ import { stripAnsi } from './ansi-stripper';
 
 export class ConversationLogger {
   private lastUserMessage = '';
+  private lastClaudeResponse = '';
+  private lastLoggedUser = '';     // Track what we actually logged
+  private lastLoggedClaude = '';   // Track what we actually logged
   private isCapturingResponse = false;
   private responseBuffer: string[] = [];
   
@@ -49,9 +52,14 @@ export class ConversationLogger {
         }
         
         // Extract and save user message
-        this.lastUserMessage = trimmed.substring(1).trim();
-        if (this.lastUserMessage) {
-          conversationParts.push(`User: ${this.lastUserMessage}\n`);
+        const newUserMessage = trimmed.substring(1).trim();
+        if (newUserMessage) {
+          this.lastUserMessage = newUserMessage;
+          // Only log if we haven't logged this exact message before
+          if (newUserMessage !== this.lastLoggedUser) {
+            this.lastLoggedUser = newUserMessage;
+            conversationParts.push(`User: ${this.lastUserMessage}\n`);
+          }
         }
       }
       // Detect Claude's response (lines starting with ⏺)
@@ -79,7 +87,12 @@ export class ConversationLogger {
       else if (trimmed === '' && this.isCapturingResponse && this.responseBuffer.length > 0) {
         const response = this.responseBuffer.join('\n').trim();
         if (response) {
-          conversationParts.push(`Claude: ${response}\n`);
+          this.lastClaudeResponse = response;
+          // Only log if we haven't logged this exact response before
+          if (response !== this.lastLoggedClaude) {
+            this.lastLoggedClaude = response;
+            conversationParts.push(`Claude: ${response}\n`);
+          }
         }
         this.responseBuffer = [];
         this.isCapturingResponse = false;
@@ -95,9 +108,13 @@ export class ConversationLogger {
     if (this.isCapturingResponse && this.responseBuffer.length > 0) {
       const response = this.responseBuffer.join('\n').trim();
       if (response && !response.includes('Thriving')) {
-        this.responseBuffer = [];
-        this.isCapturingResponse = false;
-        return `Claude: ${response}\n`;
+        // Only return if we haven't logged this before
+        if (response !== this.lastLoggedClaude) {
+          this.lastLoggedClaude = response;
+          this.responseBuffer = [];
+          this.isCapturingResponse = false;
+          return `Claude: ${response}\n`;
+        }
       }
     }
     

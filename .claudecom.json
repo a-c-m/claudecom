@@ -1,0 +1,13 @@
+{
+  "transport": "file",
+  "instance": "claude-com",
+  "verbose": false,
+  "printMode": false,
+  "command": "claude",
+  
+  "file": {
+    "inputPath": ".claude/wip/scratchpad/input.txt",
+    "outputPath": ".claude/wip/scratchpad/output.txt",
+    "watchInterval": 5000
+  }
+}
