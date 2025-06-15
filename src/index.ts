@@ -1,9 +1,6 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
-import { Passthrough } from './terminal/passthrough';
-import { TerminalBridge } from './bridge';
-import { StandaloneBridge } from './standalone-bridge';
-import { PrintModeBridge } from './print-mode-bridge';
+import { Bridge } from './bridge';
 import { createAdapter, AdapterType } from './adapters';
 import { ConfigManager } from './config';
 
@@ -20,7 +17,6 @@ program
   .option('--config <path>', 'path to ClaudeCom config file')
   .option('--no-color', 'disable color output')
   .option('--verbose', 'verbose logging')
-  .option('--print-mode', 'use Claude print mode (recommended for file transport)')
   .helpOption('-h, --help', 'display help for command')
   .argument('[command]', 'command to run (defaults to claude)')
   .action(async (command, options) => {
@@ -45,23 +41,18 @@ program
     const transportType = config.get('transport') as AdapterType;
     const instanceName = config.get('instance');
     const verbose = config.get('verbose', false);
-    const printMode = config.get('printMode', false);
     
     // Debug config loading
     if (verbose) {
       process.stderr.write(`[claudecom] Config loaded: ${JSON.stringify(config.getConfig(), null, 2)}\n`);
     }
     
-    // Determine if we're in piped mode or standalone mode
-    const isPiped = !process.stdin.isTTY;
-
     if (verbose) {
       process.stderr.write(`[claudecom] Starting with instance name: ${instanceName}\n`);
       process.stderr.write(`[claudecom] Using transport: ${transportType}\n`);
-      process.stderr.write(`[claudecom] Mode: ${isPiped ? 'piped' : 'standalone'}\n`);
     }
 
-    let bridge: TerminalBridge | StandaloneBridge | PrintModeBridge | undefined;
+    let bridge: Bridge | undefined;
 
     try {
       // Get transport-specific config
@@ -70,50 +61,19 @@ program
       // Create adapter with transport-specific config
       const adapter = createAdapter(transportType, transportConfig);
 
-      if (isPiped) {
-        // Piped mode - use the original bridge
-        bridge = new TerminalBridge({
-          stdin: process.stdin,
-          stdout: process.stdout,
-          adapter,
-          instanceName,
-          verbose,
-          noColor: options.noColor
-        });
-      } else if (printMode) {
-        // Print mode - separate Claude invocation per command
-        bridge = new PrintModeBridge({
-          command: command || config.get('command', 'claude'),
-          adapter,
-          instanceName,
-          verbose
-        });
-      } else {
-        // Standalone mode - single Claude instance
-        bridge = new StandaloneBridge({
-          command: command || config.get('command', 'claude'),
-          adapter,
-          instanceName,
-          verbose,
-          transportType
-        });
-      }
+      // Create the bridge
+      bridge = new Bridge({
+        command: command || config.get('command', 'claude'),
+        adapter,
+        instanceName,
+        verbose,
+        transportType
+      });
 
       await bridge.start();
     } catch (error: any) {
       process.stderr.write(`[claudecom] Error: ${error.message}\n`);
-      
-      // Fall back to simple passthrough if adapter fails
-      if (verbose) {
-        process.stderr.write(`[claudecom] Falling back to simple passthrough\n`);
-      }
-      
-      const passthrough = new Passthrough(process.stdin, process.stdout);
-      
-      passthrough.on('error', (err) => {
-        process.stderr.write(`[claudecom] Passthrough error: ${err.message}\n`);
-        process.exit(1);
-      });
+      process.exit(1);
     }
 
     // Handle graceful shutdown

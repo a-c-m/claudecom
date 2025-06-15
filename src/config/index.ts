@@ -6,7 +6,6 @@ export interface ClaudeComConfig {
   transport?: string;
   instance?: string;
   verbose?: boolean;
-  printMode?: boolean;
   command?: string;
   // Transport-specific configurations
   file?: {
@@ -37,7 +36,6 @@ export class ConfigManager {
     transport: 'file', // Default to file transport
     instance: process.cwd().split('/').pop() || 'claude-com',
     verbose: false,
-    printMode: false,
     command: 'claude',
     file: {
       inputPath: './input.txt',
@@ -114,9 +112,6 @@ export class ConfigManager {
     if (process.env.CLAUDECOM_VERBOSE) {
       this.config.verbose = process.env.CLAUDECOM_VERBOSE === 'true';
     }
-    if (process.env.CLAUDECOM_PRINT_MODE) {
-      this.config.printMode = process.env.CLAUDECOM_PRINT_MODE === 'true';
-    }
     
     // File transport
     if (process.env.CLAUDECOM_FILE_INPUT) {
@@ -153,9 +148,6 @@ export class ConfigManager {
     }
     if (this.options.verbose !== undefined) {
       this.config.verbose = this.options.verbose;
-    }
-    if (this.options.printMode !== undefined) {
-      this.config.printMode = this.options.printMode;
     }
   }
   

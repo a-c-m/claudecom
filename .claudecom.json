@@ -2,7 +2,6 @@
   "transport": "file",
   "instance": "claude-com",
   "verbose": false,
-  "printMode": false,
   "command": "claude",
   
   "file": {
