@@ -1,0 +1,41 @@
+{
+  "ignore": [
+    ".github/**",
+    "**/migrations/*.ts",
+    "**/newrelic.cjs",
+    "**/jest.unit.ts",
+    "jest.config.ts",
+    "**/src/gql/graphql.ts",
+    "**/__generated__/**",
+    "docs/**",
+    "**/docs/**"
+  ],
+  "ignoreDependencies": [
+    "lcov",
+    "tslib",
+    "vite",
+    "@commitlint/cli",
+    "tsx",
+    "jest",
+    "jest.+",
+    "@jest.+",
+    "ts-jest",
+    "eslint-plugin-jsx-a11y",
+    "@types/eslint-plugin-jsx-a11y"
+  ],
+  "ignoreBinaries": [
+    "aws",
+    "docker-compose",
+    "jest"
+  ],
+  "node-test-runner": {
+    "entry": [
+      "**/*{.,-,_}test.?(c|m)(ts|js)",
+      "**/test-*.?(c|m)(ts|js)",
+      "**/test.?(c|m)(ts|js)",
+      "**/test/**/*.?(c|m)(ts|js)",
+      "**/**/**.spec.ts",
+      "**/**/__mocks__/**.ts"
+    ]
+  }
+}

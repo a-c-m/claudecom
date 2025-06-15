@@ -1,0 +1,8 @@
+# MCP Server Tokens Configuration
+# Copy this file to .mcp.tokens and add your personal tokens
+# DO NOT commit .mcp.tokens to version control
+# Usage: source .mcp.tokens
+
+# Add other MCP server tokens below as needed
+# export GITHUB_TOKEN="your_github_token_here"
+# export JIRA_TOKEN="your_jira_token_here"

@@ -1,0 +1,51 @@
+{
+  "name": "claudecom",
+  "version": "1.0.0",
+  "description": "Terminal-to-chat bridge for remote monitoring and control",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "claudecom": "./dist/index.js"
+  },
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "tsup",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "lint": "eslint src --ext .ts",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist coverage"
+  },
+  "keywords": [
+    "terminal",
+    "chat",
+    "slack",
+    "monitoring",
+    "claude",
+    "bridge"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "commander": "^11.1.0",
+    "@slack/bolt": "^3.17.1",
+    "dotenv": "^16.4.5",
+    "p-queue": "^7.4.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.30",
+    "@types/jest": "^29.5.12",
+    "typescript": "^5.4.3",
+    "tsx": "^4.7.1",
+    "tsup": "^8.0.2",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.2",
+    "@typescript-eslint/eslint-plugin": "^7.4.0",
+    "@typescript-eslint/parser": "^7.4.0",
+    "eslint": "^8.57.0"
+  }
+}
